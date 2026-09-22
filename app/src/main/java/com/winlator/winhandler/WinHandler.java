@@ -172,6 +172,13 @@ public class WinHandler {
         }
     }
 
+    // Some devices (e.g. Odin handhelds with a companion "game assistant"/dual-screen app) fire
+    // several InputDevice-changed callbacks in a row for what is really one physical event, which
+    // otherwise re-runs the full scanForDevices()+reassignment on the main thread 2-3x back to
+    // back, every few seconds, for the whole session. Debounce so a burst collapses into one pass.
+    private static final long CONTROLLER_REFRESH_DEBOUNCE_MS = 250;
+    private volatile long lastControllerRefreshUptimeMs = -CONTROLLER_REFRESH_DEBOUNCE_MS;
+
     public void refreshControllerMappings() {
         refreshControllerMappings(false);
     }
@@ -181,6 +188,12 @@ public class WinHandler {
     }
 
     private void refreshControllerMappings(boolean clearDisconnectedSlots) {
+        long now = SystemClock.uptimeMillis();
+        if (now - lastControllerRefreshUptimeMs < CONTROLLER_REFRESH_DEBOUNCE_MS) {
+            Log.d(TAG, "Skipping redundant controller refresh (debounced)");
+            return;
+        }
+        lastControllerRefreshUptimeMs = now;
         Log.d(TAG, "Refreshing controller assignments from settings...");
         currentController = null;
         for (int i = 0; i < extraControllers.length; i++) {
