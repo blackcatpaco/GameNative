@@ -1,7 +1,10 @@
 package app.gamenative.externaldisplay
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.StateListDrawable
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -55,18 +58,44 @@ internal class HubLayout(
 
     private val hubTypeface = ResourcesCompat.getFont(context, R.font.share_tech_mono_regular)
 
-    // Grey/black palette: black backdrop, grey buttons, off-white text/labels.
-    private val hubBackground = Color.parseColor("#0A0A0A")
-    private val hubButtonBackground = Color.parseColor("#2A2A2A")
-    private val hubTextColor = Color.parseColor("#F2F2F2")
+    // Green-phosphor CRT palette, styled after VOTV's in-fiction SCADA/radar terminals:
+    // black backdrop, bright green strokes/text, a dim green for secondary graticule lines.
+    private val hubBackground = Color.BLACK
+    private val hubGreen = Color.parseColor("#33FF33")
+    private val hubGreenDim = Color.parseColor("#124312")
+    private val hubTextColor = hubGreen
 
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 
     private fun <T : TextView> T.applyHubFont(): T = apply { typeface = hubTypeface }
 
+    // Black fill / green outline normally; reverse-video (green fill / black text) while
+    // pressed, like a phosphor terminal's keyed-in response rather than a mobile ripple.
+    private fun phosphorButtonBackground(): StateListDrawable {
+        val normal = GradientDrawable().apply {
+            setColor(Color.BLACK)
+            setStroke(dp(2), hubGreen)
+        }
+        val pressed = GradientDrawable().apply {
+            setColor(hubGreen)
+            setStroke(dp(2), hubGreen)
+        }
+        return StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_pressed), pressed)
+            addState(intArrayOf(), normal)
+        }
+    }
+
+    private val phosphorTextColors = ColorStateList(
+        arrayOf(intArrayOf(android.R.attr.state_pressed), intArrayOf()),
+        intArrayOf(Color.BLACK, hubGreen),
+    )
+
     private fun Button.applyHubButtonStyle(): Button = apply {
-        setBackgroundColor(hubButtonBackground)
-        setTextColor(hubTextColor)
+        background = phosphorButtonBackground()
+        setTextColor(phosphorTextColors)
+        setAllCaps(true)
+        letterSpacing = 0.08f
     }
 
     init {
@@ -138,13 +167,55 @@ internal class HubLayout(
         )
     }
 
-    private fun buildHotkeyPage(): View = buildKeyGridPage(hotkeys)
+    // Hotkey grid plus the scroll-wheel control, for VOTV's radio/radar knobs that read a
+    // PC mouse wheel.
+    private fun buildHotkeyPage(): View {
+        val column = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(dp(16), dp(56), dp(16), dp(16))
+        }
+        column.addView(buildKeyGrid(hotkeys))
+        column.addView(scrollWheelSection())
+        return column
+    }
+
+    private fun scrollWheelSection(): View {
+        val section = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+        }
+        section.addView(
+            TextView(context).applyHubFont().apply {
+                text = "SCROLL"
+                textSize = 14f
+                setTextColor(hubGreenDim)
+                letterSpacing = 0.2f
+                gravity = Gravity.CENTER
+            },
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = dp(12)
+                bottomMargin = dp(4)
+            },
+        )
+        section.addView(ScrollWheelView(context, xServer), LinearLayout.LayoutParams(dp(120), dp(180)))
+        return section
+    }
 
     private fun buildKeyGridPage(keys: List<Pair<String, XKeycode>>): View {
         val column = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(dp(16), dp(56), dp(16), dp(16))
+        }
+        column.addView(buildKeyGrid(keys))
+        return column
+    }
+
+    private fun buildKeyGrid(keys: List<Pair<String, XKeycode>>): LinearLayout {
+        val column = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
         }
         keys.chunked(3).forEach { rowKeys ->
             val row = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
@@ -169,7 +240,7 @@ internal class HubLayout(
 
     // Press while touched, release on lift, so holding a button holds the key.
     private fun hotkeyButton(label: String, key: XKeycode) = Button(context).applyHubFont().applyHubButtonStyle().apply {
-        text = label
+        text = "[$label]"
         textSize = 20f
         setOnTouchListener { v, event ->
             when (event.actionMasked) {
