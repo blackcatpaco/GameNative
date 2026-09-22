@@ -806,8 +806,14 @@ fun PluviaMain(
 
     LaunchedEffect(Unit) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            // Only attempt reconnection if not already connected/connecting and not in offline mode
-            val shouldAttemptReconnect = !state.isSteamConnected &&
+            // The VOTV launcher variant never touches Steam/GOG/Epic/Amazon login, so it has
+            // no CM server session to reconnect and no stored credentials to reconnect with.
+            // Without this guard, SteamService still spins up here on every app start and
+            // spends the whole game-load window (and beyond) repeating its 15/20/25/30s
+            // WebSocketConnection watchdog disconnect/reconnect cycle against a session that
+            // will never succeed, burning CPU/network on the device's most contended phase.
+            val shouldAttemptReconnect = !BuildConfig.VOTV_LAUNCHER &&
+                !state.isSteamConnected &&
                 !isConnecting &&
                 !SteamService.keepAlive
 

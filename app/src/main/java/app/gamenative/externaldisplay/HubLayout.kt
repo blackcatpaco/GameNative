@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import app.gamenative.R
@@ -68,12 +69,12 @@ internal class HubLayout(
         removeAllViews()
         val column = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(dp(24), dp(24), dp(24), dp(24))
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(dp(24), dp(16), dp(24), dp(16))
         }
         column.addView(TextView(context).applyHubFont().apply {
             text = "Voices of the Void"
-            textSize = 24f
+            textSize = 22f
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
         })
@@ -85,18 +86,22 @@ internal class HubLayout(
         placeholderPages.forEach { (label, message) ->
             column.addView(menuButton(label) { showPage(placeholderPage(message)) })
         }
+        val scroll = ScrollView(context).apply {
+            isFillViewport = true
+            addView(column, LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        }
         addView(
-            column,
+            scroll,
             LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
         )
     }
 
     private fun menuButton(label: String, onClick: () -> Unit) = Button(context).applyHubFont().apply {
         text = label
-        textSize = 20f
+        textSize = 18f
         setOnClickListener { onClick() }
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(80)).apply {
-            setMargins(0, dp(12), 0, 0)
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(64)).apply {
+            setMargins(0, dp(10), 0, 0)
         }
     }
 
