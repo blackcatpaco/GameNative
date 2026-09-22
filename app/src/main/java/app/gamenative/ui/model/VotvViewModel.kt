@@ -134,11 +134,11 @@ class VotvViewModel @Inject constructor(
      * and touch fallback lives in the bottom-screen hub instead.
      *
      * Default mapping (confirmed VOTV keys only — see the "extra keys?" note below):
-     *  A=E (interact)  B=Space (jump)  X=F (flashlight)  Y=Tab (inventory/PDA)
-     *  L1=Q  R1=C  L2=right-click (zoom)  R2=left-click (fire)
+     *  A=R (pick up)  B=Space (jump)  X=F (flashlight)  Y=Tab (inventory/PDA)
+     *  L1=Q  R1=E (interact/hold)  L2=right-click (zoom)  R2=left-click (fire)
      *  L3=Ctrl (crouch)  R3=Shift (sprint)
      *  Left stick=WASD (movement)  Right stick=mouse look
-     *  D-pad up=R (reload)  D-pad down/left/right=unbound for now (see below)
+     *  D-pad up=C (ragdoll)  D-pad down/left/right=unbound for now (see below)
      *  Start=Esc (pause)  Select=Tab  Home=GameNative quick menu
      *
      * D-pad down/left/right are deliberately left unbound: VOTV's 1-9 hotbar keys are moving to
@@ -167,17 +167,19 @@ class VotvViewModel @Inject constructor(
         controller.getControllerBindings().toList().forEach(controller::removeControllerBinding)
 
         val bindings = mapOf(
-            KeyEvent.KEYCODE_BUTTON_A to Binding.KEY_E,
+            // Pick up (R), interact/hold (E), and ragdoll (C) rotated one slot from the original
+            // A=E / R1=C / D-pad up=R layout so ragdoll sits under the thumb on D-pad up.
+            KeyEvent.KEYCODE_BUTTON_A to Binding.KEY_R,
             KeyEvent.KEYCODE_BUTTON_B to Binding.KEY_SPACE,
             KeyEvent.KEYCODE_BUTTON_X to Binding.KEY_F,
             KeyEvent.KEYCODE_BUTTON_Y to Binding.KEY_TAB,
             KeyEvent.KEYCODE_BUTTON_L1 to Binding.KEY_Q,
-            KeyEvent.KEYCODE_BUTTON_R1 to Binding.KEY_C,
+            KeyEvent.KEYCODE_BUTTON_R1 to Binding.KEY_E,
             KeyEvent.KEYCODE_BUTTON_L2 to Binding.MOUSE_RIGHT_BUTTON,
             KeyEvent.KEYCODE_BUTTON_R2 to Binding.MOUSE_LEFT_BUTTON,
             KeyEvent.KEYCODE_BUTTON_THUMBL to Binding.KEY_CTRL_L,
             KeyEvent.KEYCODE_BUTTON_THUMBR to Binding.KEY_SHIFT_L,
-            KeyEvent.KEYCODE_DPAD_UP to Binding.KEY_R,
+            KeyEvent.KEYCODE_DPAD_UP to Binding.KEY_C,
             KeyEvent.KEYCODE_DPAD_DOWN to Binding.NONE,
             KeyEvent.KEYCODE_DPAD_LEFT to Binding.NONE,
             KeyEvent.KEYCODE_DPAD_RIGHT to Binding.NONE,
@@ -210,6 +212,6 @@ class VotvViewModel @Inject constructor(
     private companion object {
         const val VOTV_PROFILE_NAME = "VOTV Controller"
         const val EXTRA_DEFAULTS_VERSION = "votvDefaultsVersion"
-        const val VOTV_DEFAULTS_VERSION = 3
+        const val VOTV_DEFAULTS_VERSION = 4
     }
 }
