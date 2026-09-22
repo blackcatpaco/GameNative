@@ -20,6 +20,15 @@ public class DXVKHelper {
         envVars.put("DXVK_STATE_CACHE_PATH", imageFs.cache_path);
         envVars.put("DXVK_LOG_LEVEL", "none");
 
+        // DXVK defaults to one shader compiler thread per core, which can pin every core
+        // to ~100% during a cold shader-compile phase (e.g. first launch, empty cache) and
+        // starve the Android UI/input-dispatch thread long enough to trip the OS ANR watchdog.
+        // Reserve 2 cores for the rest of the system so it stays responsive while compiling.
+        int cpuCores = Runtime.getRuntime().availableProcessors();
+        if (cpuCores > 2) {
+            envVars.put("DXVK_NUM_COMPILER_THREADS", String.valueOf(cpuCores - 2));
+        }
+
         File rootDir = ImageFs.find(context).getRootDir();
         File dxvkConfigFile = new File(imageFs.config_path+"/dxvk.conf");
 
