@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.AtomicFile
 import app.gamenative.BuildConfig
 import app.gamenative.PluviaApp
@@ -1460,6 +1461,50 @@ object PowerManager {
         }.onFailure {
             Timber.tag("PowerManager").w(it, "Failed to read the CPU list of ${dir.absolutePath}")
         }.getOrNull()
+    }
+
+    // ========================================
+    // RGB Stick LEDs
+    // ========================================
+
+    private const val STICK_LED_NODE_LEFT = "/sys/class/sn3112l/led/brightness"
+    private const val STICK_LED_NODE_RIGHT = "/sys/class/sn3112r/led/brightness"
+    private const val STICK_LED_DEDUPE_MS = 16L
+
+    private var lastStickLedCommand: String? = null
+    private var lastStickLedWriteAt: Long = 0L
+
+    /**
+     * True when this device exposes the vendor RGB stick-LED nodes, driven the same
+     * capability-based way as CPU/GPU/fan control: available means [driver] resolved to a
+     * [PServerDriver] (which only happens once its PServerBinder service lookup already
+     * succeeded), never a build-prop or model-string guess.
+     */
+    fun isStickLedAvailable(): Boolean = driver is PServerDriver
+
+    /**
+     * Sets both analog stick LED rings (all 4 zones: 2 per stick) to one RGB colour, 0..255
+     * each. Brightness on the wire is left at 255; the nodes are write-only so a previous
+     * value can never be read back to restore, and scaling in software is simpler than
+     * guessing at hardware gamma. A no-op on any device without the vendor service.
+     *
+     * Performs a blocking root-shell round trip (through [PServerDriver.executeRootCommand])
+     * and must only be called from a background thread/dispatcher — never the main thread.
+     */
+    fun setStickLedColor(r: Int, g: Int, b: Int) {
+        val pserver = driver as? PServerDriver ?: return
+        val rgb = "${r.coerceIn(0, 255)}:${g.coerceIn(0, 255)}:${b.coerceIn(0, 255)}:255"
+        val command = "echo 1-$rgb > $STICK_LED_NODE_LEFT && echo 2-$rgb > $STICK_LED_NODE_LEFT && " +
+            "echo 1-$rgb > $STICK_LED_NODE_RIGHT && echo 2-$rgb > $STICK_LED_NODE_RIGHT"
+
+        synchronized(this) {
+            val now = SystemClock.uptimeMillis()
+            if (command == lastStickLedCommand && now - lastStickLedWriteAt < STICK_LED_DEDUPE_MS) return
+            lastStickLedCommand = command
+            lastStickLedWriteAt = now
+        }
+
+        pserver.executeRootCommand(command)
     }
 
     /**
