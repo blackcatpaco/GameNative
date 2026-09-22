@@ -137,7 +137,7 @@ class VotvViewModel @Inject constructor(
      *  A=R (pick up)  B=Space (jump)  X=F (flashlight)  Y=Tab (inventory/PDA)
      *  L1=Q  R1=E (interact/hold)  L2=right-click (zoom)  R2=left-click (fire)
      *  L3=Ctrl (crouch)  R3=Shift (sprint)
-     *  Left stick=WASD (movement)  Right stick=mouse look
+     *  Left stick=WASD (movement)  Right stick=gamepad right thumbstick (camera look)
      *  D-pad up=C (ragdoll)  D-pad down/left/right=unbound for now (see below)
      *  Start=Esc (pause)  Select=Tab  Home=GameNative quick menu
      *
@@ -191,11 +191,14 @@ class VotvViewModel @Inject constructor(
             ExternalControllerBinding.getKeyCodeForAxis(MotionEvent.AXIS_Y, 1.toByte()) to Binding.KEY_S,
             ExternalControllerBinding.getKeyCodeForAxis(MotionEvent.AXIS_X, (-1).toByte()) to Binding.KEY_A,
             ExternalControllerBinding.getKeyCodeForAxis(MotionEvent.AXIS_X, 1.toByte()) to Binding.KEY_D,
-            // Right stick -> mouse look
-            ExternalControllerBinding.getKeyCodeForAxis(MotionEvent.AXIS_RZ, (-1).toByte()) to Binding.MOUSE_MOVE_UP,
-            ExternalControllerBinding.getKeyCodeForAxis(MotionEvent.AXIS_RZ, 1.toByte()) to Binding.MOUSE_MOVE_DOWN,
-            ExternalControllerBinding.getKeyCodeForAxis(MotionEvent.AXIS_Z, (-1).toByte()) to Binding.MOUSE_MOVE_LEFT,
-            ExternalControllerBinding.getKeyCodeForAxis(MotionEvent.AXIS_Z, 1.toByte()) to Binding.MOUSE_MOVE_RIGHT,
+            // Right stick -> native gamepad right thumbstick (camera look). VOTV apparently reads
+            // XInput/raw controller axes directly and ignores synthesized mouse-move deltas
+            // entirely, so MOUSE_MOVE_* here left look completely unresponsive; the GAMEPAD_*
+            // bindings feed ExternalController's virtual-gamepad state instead of the mouse.
+            ExternalControllerBinding.getKeyCodeForAxis(MotionEvent.AXIS_RZ, (-1).toByte()) to Binding.GAMEPAD_RIGHT_THUMB_UP,
+            ExternalControllerBinding.getKeyCodeForAxis(MotionEvent.AXIS_RZ, 1.toByte()) to Binding.GAMEPAD_RIGHT_THUMB_DOWN,
+            ExternalControllerBinding.getKeyCodeForAxis(MotionEvent.AXIS_Z, (-1).toByte()) to Binding.GAMEPAD_RIGHT_THUMB_LEFT,
+            ExternalControllerBinding.getKeyCodeForAxis(MotionEvent.AXIS_Z, 1.toByte()) to Binding.GAMEPAD_RIGHT_THUMB_RIGHT,
         )
         for ((keyCode, binding) in bindings) {
             controller.addControllerBinding(
@@ -212,6 +215,6 @@ class VotvViewModel @Inject constructor(
     private companion object {
         const val VOTV_PROFILE_NAME = "VOTV Controller"
         const val EXTRA_DEFAULTS_VERSION = "votvDefaultsVersion"
-        const val VOTV_DEFAULTS_VERSION = 4
+        const val VOTV_DEFAULTS_VERSION = 5
     }
 }
