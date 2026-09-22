@@ -331,6 +331,11 @@ private val CORE_WINE_PROCESSES = setOf(
     "explorer",
     "winedevice",
     "svchost",
+    // Unreal Engine helper/child processes that can outlive the game's own window on exit;
+    // without these, the exit-process watch can stall waiting for them to clear.
+    "unrealcefsubprocess",
+    "crashreportclient",
+    "epicwebhelper",
 )
 
 private fun normalizeProcessName(name: String): String {
@@ -1003,6 +1008,7 @@ fun XServerScreen(
             winHandler.setOnGetProcessInfoListener(listener)
             try {
                 val startTime = System.currentTimeMillis()
+                var exited = false
                 while (System.currentTimeMillis() - startTime < EXIT_PROCESS_TIMEOUT_MS) {
                     val deferred = CompletableDeferred<List<ProcessInfo>?>()
                     synchronized(lock) {
@@ -1029,10 +1035,30 @@ fun XServerScreen(
                                     "processes_exited",
                                 )
                             }
+                            exited = true
                             break
                         }
                     }
                     delay(EXIT_PROCESS_POLL_INTERVAL_MS)
+                }
+                // The game's own window already closed; some helper process outside the
+                // allowlist (e.g. an engine's CEF/crash-reporter subprocess) can keep the
+                // guest "running" indefinitely and stall this watch forever. Never leave the
+                // user stuck on the game's now-windowless desktop past the timeout.
+                if (!exited) {
+                    Timber.w("Exit watch timed out waiting for non-essential processes to clear; exiting anyway")
+                    withContext(Dispatchers.Main) {
+                        exit(
+                            winHandler,
+                            frameRating,
+                            currentAppInfo,
+                            container,
+                            appId,
+                            onExit,
+                            navigateBack,
+                            "processes_exit_watch_timeout",
+                        )
+                    }
                 }
             } finally {
                 winHandler.setOnGetProcessInfoListener(previousListener)
