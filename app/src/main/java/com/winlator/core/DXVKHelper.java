@@ -20,16 +20,19 @@ public class DXVKHelper {
         envVars.put("DXVK_STATE_CACHE_PATH", imageFs.cache_path);
         envVars.put("DXVK_LOG_LEVEL", "none");
 
-        // DXVK defaults to one shader compiler thread per core, which can pin every core
-        // to ~100% during a cold shader-compile phase (e.g. first launch, empty cache) and
-        // starve the Android UI/input-dispatch thread long enough to trip the OS ANR watchdog.
-        // An earlier cap of cores-2 (6 of 8 threads on an 8-core device) still left device-wide
-        // CPU at 97-99% and grazed the 5s ANR watchdog exactly, so this reserves half the cores
-        // instead: DXVK_ASYNC is on, so compiling more slowly in the background costs FPS, not
-        // correctness, while a stalled main thread costs the whole session.
+        // DXVK defaults to one shader compiler thread per core. A cores/2 cap was tried and made
+        // things measurably worse: a device log showed the ANR-triggering stall happening while
+        // device-wide CPU was actually LOW (~30%, cores mostly idle) — the render thread was
+        // blocked waiting on a *synchronous* first-use pipeline compile (DXVK_ASYNC only smooths
+        // over recompiles of an already-existing pipeline, not the first one a given draw needs),
+        // and fewer compiler threads just makes that specific blocking wait take longer. Cutting
+        // parallelism trades a shorter, higher CPU% window for a longer, lower CPU% stall — the
+        // wrong trade here, since the stall itself is what trips the 5s ANR watchdog. cores-2
+        // (still capped, not stock) was the only config tested so far that avoided both a hard
+        // ANR-driven kill (stock/uncapped) and an extended multi-ANR stall (cores/2).
         int cpuCores = Runtime.getRuntime().availableProcessors();
         if (cpuCores > 2) {
-            envVars.put("DXVK_NUM_COMPILER_THREADS", String.valueOf(Math.max(1, cpuCores / 2)));
+            envVars.put("DXVK_NUM_COMPILER_THREADS", String.valueOf(cpuCores - 2));
         }
 
         File rootDir = ImageFs.find(context).getRootDir();
