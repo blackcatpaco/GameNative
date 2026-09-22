@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import app.gamenative.R
@@ -80,14 +79,8 @@ internal class HubLayout(
         val column = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(24), dp(16), dp(24), dp(16))
+            setPadding(dp(24), dp(24), dp(24), dp(24))
         }
-        column.addView(TextView(context).applyHubFont().apply {
-            text = "Voices of the Void"
-            textSize = 22f
-            setTextColor(hubTextColor)
-            gravity = Gravity.CENTER
-        })
         column.addView(menuButton("Mouse + Keyboard") {
             showPage(HybridInputLayout(context, xServer, touchpadViewProvider))
         })
@@ -96,22 +89,19 @@ internal class HubLayout(
         placeholderPages.forEach { (label, message) ->
             column.addView(menuButton(label) { showPage(placeholderPage(message)) })
         }
-        val scroll = ScrollView(context).apply {
-            isFillViewport = true
-            addView(column, LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
-        }
         addView(
-            scroll,
+            column,
             LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
         )
     }
 
+    // Weighted so the 5 options evenly fill the available height with no title and no scrolling.
     private fun menuButton(label: String, onClick: () -> Unit) = Button(context).applyHubFont().applyHubButtonStyle().apply {
         text = label
         textSize = 18f
         setOnClickListener { onClick() }
-        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(64)).apply {
-            setMargins(0, dp(10), 0, 0)
+        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f).apply {
+            setMargins(0, dp(8), 0, dp(8))
         }
     }
 
