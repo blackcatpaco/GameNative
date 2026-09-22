@@ -56,12 +56,22 @@ internal class HubLayout(
 
     private val hubTypeface = ResourcesCompat.getFont(context, R.font.share_tech_mono_regular)
 
+    // Grey/black palette: black backdrop, grey buttons, off-white text/labels.
+    private val hubBackground = Color.parseColor("#0A0A0A")
+    private val hubButtonBackground = Color.parseColor("#2A2A2A")
+    private val hubTextColor = Color.parseColor("#F2F2F2")
+
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 
     private fun <T : TextView> T.applyHubFont(): T = apply { typeface = hubTypeface }
 
+    private fun Button.applyHubButtonStyle(): Button = apply {
+        setBackgroundColor(hubButtonBackground)
+        setTextColor(hubTextColor)
+    }
+
     init {
-        setBackgroundColor(Color.parseColor("#101418"))
+        setBackgroundColor(hubBackground)
         showMenu()
     }
 
@@ -75,7 +85,7 @@ internal class HubLayout(
         column.addView(TextView(context).applyHubFont().apply {
             text = "Voices of the Void"
             textSize = 22f
-            setTextColor(Color.WHITE)
+            setTextColor(hubTextColor)
             gravity = Gravity.CENTER
         })
         column.addView(menuButton("Mouse + Keyboard") {
@@ -96,7 +106,7 @@ internal class HubLayout(
         )
     }
 
-    private fun menuButton(label: String, onClick: () -> Unit) = Button(context).applyHubFont().apply {
+    private fun menuButton(label: String, onClick: () -> Unit) = Button(context).applyHubFont().applyHubButtonStyle().apply {
         text = label
         textSize = 18f
         setOnClickListener { onClick() }
@@ -111,7 +121,7 @@ internal class HubLayout(
             page,
             LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
         )
-        val back = Button(context).applyHubFont().apply {
+        val back = Button(context).applyHubFont().applyHubButtonStyle().apply {
             text = "Menu"
             setOnClickListener { showMenu() }
         }
@@ -129,7 +139,7 @@ internal class HubLayout(
             TextView(context).applyHubFont().apply {
                 text = message
                 textSize = 20f
-                setTextColor(Color.WHITE)
+                setTextColor(hubTextColor)
                 gravity = Gravity.CENTER
             },
             LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).apply {
@@ -168,7 +178,7 @@ internal class HubLayout(
     }
 
     // Press while touched, release on lift, so holding a button holds the key.
-    private fun hotkeyButton(label: String, key: XKeycode) = Button(context).applyHubFont().apply {
+    private fun hotkeyButton(label: String, key: XKeycode) = Button(context).applyHubFont().applyHubButtonStyle().apply {
         text = label
         textSize = 20f
         setOnTouchListener { v, event ->

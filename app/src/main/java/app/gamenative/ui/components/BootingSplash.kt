@@ -84,9 +84,11 @@ import app.gamenative.data.FeaturedCta
 import app.gamenative.data.localizedBody
 import app.gamenative.data.localizedLabel
 import app.gamenative.data.localizedTitle
+import app.gamenative.BuildConfig
 import app.gamenative.ui.screen.library.FeaturedCtaButton
 import app.gamenative.ui.theme.BrandGradient
 import app.gamenative.ui.theme.PluviaTheme
+import app.gamenative.ui.theme.ShareTechMono
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil.CoilImage
 import java.io.File
@@ -103,8 +105,12 @@ fun BootingSplash(
     onAbort: (() -> Unit)? = null,
 ) {
     // Tips rotation (no animation cost, safe outside visibility check)
+    // The VOTV launcher variant has no library/containers/graphics-test screens to tip
+    // about, so it skips this section entirely (the empty list already short-circuits
+    // every "tips.isNotEmpty()" check below).
     val context = LocalContext.current
     val tips = remember(context) {
+        if (BuildConfig.VOTV_LAUNCHER) return@remember emptyList<String>()
         listOf(
             context.getString(R.string.game_launch_tip_1),
             context.getString(R.string.game_launch_tip_2, context.getString(R.string.option_open_container)),
@@ -351,43 +357,59 @@ fun BootingSplash(
             ) {
                 Spacer(modifier = Modifier.weight(0.4f))
 
-                // Logo with glow effect
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.scale(logoScale),
-                ) {
-                    // Glow layer (blurred behind)
+                if (BuildConfig.VOTV_LAUNCHER) {
+                    // VOTV launcher variant: no GameNative branding, just a plain
+                    // monospace "Loading" label.
                     Text(
-                        text = "GameNative",
+                        text = stringResource(R.string.loading),
                         style = MaterialTheme.typography.displaySmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 36.sp,
-                            letterSpacing = 2.sp,
+                            fontFamily = ShareTechMono,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 32.sp,
+                            letterSpacing = 3.sp,
                         ),
-                        color = PluviaTheme.colors.accentCyan.copy(alpha = glowAlpha * 0.6f),
-                        modifier = Modifier
-                            .blur(20.dp)
-                            .padding(20.dp)
-                            .alpha(glowAlpha),
+                        color = PluviaTheme.colors.accentCyan,
+                        modifier = Modifier.scale(logoScale),
                     )
+                } else {
+                    // Logo with glow effect
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.scale(logoScale),
+                    ) {
+                        // Glow layer (blurred behind)
+                        Text(
+                            text = "GameNative",
+                            style = MaterialTheme.typography.displaySmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 36.sp,
+                                letterSpacing = 2.sp,
+                            ),
+                            color = PluviaTheme.colors.accentCyan.copy(alpha = glowAlpha * 0.6f),
+                            modifier = Modifier
+                                .blur(20.dp)
+                                .padding(20.dp)
+                                .alpha(glowAlpha),
+                        )
 
-                    // Main logo text
-                    Text(
-                        text = "GameNative",
-                        style = MaterialTheme.typography.displaySmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 36.sp,
-                            letterSpacing = 2.sp,
-                            shadow = Shadow(
-                                color = PluviaTheme.colors.accentCyan.copy(alpha = 0.5f),
-                                offset = Offset(0f, 0f),
-                                blurRadius = 20f,
+                        // Main logo text
+                        Text(
+                            text = "GameNative",
+                            style = MaterialTheme.typography.displaySmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 36.sp,
+                                letterSpacing = 2.sp,
+                                shadow = Shadow(
+                                    color = PluviaTheme.colors.accentCyan.copy(alpha = 0.5f),
+                                    offset = Offset(0f, 0f),
+                                    blurRadius = 20f,
+                                ),
+                                brush = Brush.horizontalGradient(
+                                    colors = BrandGradient,
+                                ),
                             ),
-                            brush = Brush.horizontalGradient(
-                                colors = BrandGradient,
-                            ),
-                        ),
-                    )
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(28.dp))

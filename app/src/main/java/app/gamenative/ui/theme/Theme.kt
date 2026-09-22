@@ -104,7 +104,28 @@ private val DarkPluviaColors = PluviaColors(
     compatibilityBadBackground = CompatibilityBadBg,
 )
 
-val BrandGradient = listOf(PluviaCyan, PluviaPurple, PluviaPink)
+/**
+ * VOTV launcher variant's greyscale palette. Same shape as [DarkPluviaColors] but every
+ * brand/accent/surface color is a shade of grey or black; semantic status colors are shared
+ * with the regular app so error/warning/success states stay legible.
+ */
+private val VotvPluviaColors = DarkPluviaColors.copy(
+    accentCyan = VotvAccentLight,
+    accentPurple = VotvAccentMid,
+    accentPink = VotvAccentDark,
+
+    surfacePanel = VotvSurface,
+    surfaceElevated = VotvSurfaceElevated,
+
+    borderDefault = VotvBorder,
+    textMuted = VotvForegroundMuted,
+)
+
+val BrandGradient = if (BuildConfig.VOTV_LAUNCHER) {
+    listOf(VotvAccentDark, VotvAccentMid, VotvAccentLight)
+} else {
+    listOf(PluviaCyan, PluviaPurple, PluviaPink)
+}
 
 // Light theme placeholder - customize when adding light theme support
 // private val LightPluviaColors = PluviaColors(...)
@@ -161,6 +182,58 @@ private val DarkColorScheme = darkColorScheme(
     surfaceContainerLowest = PluviaBackground,
 )
 
+/**
+ * VOTV launcher variant's greyscale Material3 color scheme, gated behind
+ * BuildConfig.VOTV_LAUNCHER in PluviaTheme so the regular GameNative app keeps its brand
+ * colors unchanged. Errors keep the shared PluviaDestructive red so failures stay legible.
+ */
+private val VotvColorScheme = darkColorScheme(
+    primary = VotvPrimary,
+    onPrimary = VotvBackground,
+    primaryContainer = VotvSecondary,
+    onPrimaryContainer = VotvForeground,
+
+    secondary = VotvSecondary,
+    onSecondary = VotvForeground,
+    secondaryContainer = VotvSecondary,
+    onSecondaryContainer = VotvForeground,
+
+    tertiary = VotvAccentMid,
+    onTertiary = VotvBackground,
+    tertiaryContainer = VotvSecondary,
+    onTertiaryContainer = VotvForeground,
+
+    background = VotvBackground,
+    onBackground = VotvForeground,
+
+    surface = VotvCard,
+    onSurface = VotvForeground,
+    surfaceVariant = VotvSecondary,
+    onSurfaceVariant = VotvForegroundMuted,
+    surfaceTint = VotvPrimary,
+
+    inverseSurface = VotvForeground,
+    inverseOnSurface = VotvBackground,
+    inversePrimary = VotvPrimary,
+
+    error = PluviaDestructive,
+    onError = VotvForeground,
+    errorContainer = PluviaDestructive.copy(alpha = 0.2f),
+    onErrorContainer = VotvForeground,
+
+    outline = VotvForegroundMuted,
+    outlineVariant = VotvSecondary,
+
+    scrim = Color.Black.copy(alpha = 0.5f),
+    surfaceBright = VotvSecondary,
+    surfaceDim = VotvBackground,
+    surfaceContainer = VotvCard,
+    surfaceContainerHigh = VotvSecondary,
+    surfaceContainerHighest = VotvSecondary.copy(alpha = 0.9f),
+    surfaceContainerLow = VotvBackground,
+    surfaceContainerLowest = VotvBackground,
+)
+
 @Composable
 fun PluviaTheme(
     seedColor: Color = PluviaSeed,
@@ -169,8 +242,14 @@ fun PluviaTheme(
     style: PaletteStyle = PaletteStyle.TonalSpot,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = DarkColorScheme
-    val pluviaColors = if (isDark) DarkPluviaColors else DarkPluviaColors // We can use LightPluviaColors when ready
+    val colorScheme = if (BuildConfig.VOTV_LAUNCHER) VotvColorScheme else DarkColorScheme
+    val pluviaColors = if (BuildConfig.VOTV_LAUNCHER) {
+        VotvPluviaColors
+    } else if (isDark) {
+        DarkPluviaColors
+    } else {
+        DarkPluviaColors // We can use LightPluviaColors when ready
+    }
 
     val view = LocalView.current
     if (!view.isInEditMode) {

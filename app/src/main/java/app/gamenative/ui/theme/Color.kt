@@ -81,3 +81,20 @@ val CompatibilityUnknown = Color(0xFF9E9E9E)
 val CompatibilityUnknownBg = Color(0xFF424242)
 val CompatibilityBad = Color(0xFFEF5350)
 val CompatibilityBadBg = Color(0xFFB71C1C)
+
+// VOTV launcher variant's greyscale palette (gated behind BuildConfig.VOTV_LAUNCHER in
+// Theme.kt), so the regular GameNative app's brand colors are unchanged. Semantic status
+// colors (success/warning/danger/compatibility) are deliberately left alone so real error
+// and warning states stay legible instead of blending into grey.
+val VotvBackground = Color(0xFF0A0A0A)
+val VotvSurface = Color(0xFF161616)
+val VotvSurfaceElevated = Color(0xFF202020)
+val VotvCard = Color(0xFF0A0A0A)
+val VotvForeground = Color(0xFFF2F2F2)
+val VotvForegroundMuted = Color(0xFF9A9A9A)
+val VotvSecondary = Color(0xFF2A2A2A)
+val VotvPrimary = Color(0xFFB5B5B5)
+val VotvBorder = Color(0xFF3A3A3A)
+val VotvAccentLight = Color(0xFFD8D8D8)
+val VotvAccentMid = Color(0xFFA0A0A0)
+val VotvAccentDark = Color(0xFF6E6E6E)

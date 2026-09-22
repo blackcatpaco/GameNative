@@ -385,11 +385,15 @@ class MainViewModel @Inject constructor(
             // The splash hides and re-shows between boot phases; a quick re-show is the same
             // impression. Re-querying here would record extra shows and null the ad mid-boot
             // once the daily cap is crossed, unmounting the sponsor card while the splash is up.
+            // The VOTV launcher variant has no store/library to recommend from and no
+            // sponsors, so it never shows a boot sponsor/recommendation card.
             val held = _state.value.bootAd
             val heldAllowed = held != null &&
                 (if (held.sponsored) PrefManager.bootScreenAdsEnabled else PrefManager.bootScreenRecommendationsEnabled)
             val reuse = heldAllowed && System.currentTimeMillis() - bootAdHiddenAtMs < BOOT_AD_REUSE_WINDOW_MS
-            val ad = if (reuse) {
+            val ad = if (BuildConfig.VOTV_LAUNCHER) {
+                null
+            } else if (reuse) {
                 held
             } else {
                 BootAdRepository.pickBootCard()?.also {
