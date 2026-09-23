@@ -26,6 +26,7 @@ class ExternalDisplayInputController(
     private val context: Context,
     private val xServer: XServer,
     private val touchpadViewProvider: () -> TouchpadView?,
+    private val container: Container? = null,
 ) {
     enum class Mode { OFF, TOUCHPAD, KEYBOARD, HYBRID }
 
@@ -99,6 +100,7 @@ class ExternalDisplayInputController(
                 mode = mode,
                 xServer = xServer,
                 touchpadViewProvider = touchpadViewProvider,
+                container = container,
             )
             presentation?.show()
         } else {
@@ -128,6 +130,7 @@ private class ExternalInputPresentation(
     private var mode: ExternalDisplayInputController.Mode,
     private val xServer: XServer,
     private val touchpadViewProvider: () -> TouchpadView?,
+    private val container: Container?,
 ) : Presentation(context, display) {
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
@@ -200,6 +203,9 @@ private class ExternalInputPresentation(
                         context = context,
                         xServer = xServer,
                         touchpadViewProvider = touchpadViewProvider,
+                        container = requireNotNull(container) {
+                            "HYBRID mode under VOTV_LAUNCHER requires a container"
+                        },
                     )
                 } else {
                     HybridInputLayout(

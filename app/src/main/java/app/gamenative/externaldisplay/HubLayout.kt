@@ -15,16 +15,28 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import app.gamenative.R
+import com.winlator.container.Container
 import com.winlator.widget.TouchpadView
 import com.winlator.xserver.XKeycode
 import com.winlator.xserver.XServer
+import java.util.Locale
 
 /** Bottom-screen hub: a menu page plus a page for each input mode. */
 internal class HubLayout(
     context: Context,
     private val xServer: XServer,
     private val touchpadViewProvider: () -> TouchpadView?,
+    container: Container,
 ) : FrameLayout(context) {
+
+    // Live game state from the GameNativeBridge UE4SS mod (see VotvBridgeState); null fields
+    // mean the mod hasn't reported that value yet (e.g. still at the main menu).
+    private var latestState: VotvBridgeState? = null
+    private var mapCoordText: TextView? = null
+    private var invGaugeText: TextView? = null
+    private val bridgeReader = VotvBridgeReader(VotvBridgeReader.stateFileFor(container)) { state ->
+        post { applyState(state) }
+    }
 
     // Edit this list to change the hotkey buttons (label to key).
     private val hotkeys = listOf(
@@ -34,13 +46,6 @@ internal class HubLayout(
         "F" to XKeycode.KEY_F,
         "Space" to XKeycode.KEY_SPACE,
         "Enter" to XKeycode.KEY_ENTER,
-    )
-
-    // Menu entries that just show a placeholder page until their real content is built.
-    private val placeholderPages = listOf(
-        "Map" to "Map — coming soon",
-        "Terminal" to "Terminal — coming soon",
-        "Inventory" to "Inventory — coming soon",
     )
 
     // Hotbar slots 1-9, moved here off the d-pad so the physical controller has those directions free.
@@ -103,6 +108,22 @@ internal class HubLayout(
         showMenu()
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        bridgeReader.start()
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        bridgeReader.stop()
+    }
+
+    private fun applyState(state: VotvBridgeState) {
+        latestState = state
+        mapCoordText?.text = formatMapText(state)
+        invGaugeText?.text = formatInventoryText(state)
+    }
+
     private fun showMenu() {
         removeAllViews()
         val column = LinearLayout(context).apply {
@@ -115,13 +136,63 @@ internal class HubLayout(
         })
         column.addView(menuButton("Hotkeys") { showPage(buildHotkeyPage()) })
         column.addView(menuButton("Hotbar") { showPage(buildKeyGridPage(hotbarSlots)) })
-        placeholderPages.forEach { (label, message) ->
-            column.addView(menuButton(label) { showPage(placeholderPage(message)) })
-        }
+        column.addView(menuButton("Map") { showPage(mapPage()) })
+        column.addView(menuButton("Terminal") { showPage(placeholderPage("Terminal — coming soon")) })
+        column.addView(menuButton("Inventory") { showPage(inventoryPage()) })
         addView(
             column,
             LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
         )
+    }
+
+    private fun mapPage(): View = FrameLayout(context).apply {
+        val text = TextView(context).applyHubFont().apply {
+            text = formatMapText(latestState)
+            textSize = 18f
+            setTextColor(hubTextColor)
+            gravity = Gravity.CENTER
+            letterSpacing = 0.05f
+        }
+        mapCoordText = text
+        addView(
+            text,
+            LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                gravity = Gravity.CENTER
+            },
+        )
+    }
+
+    private fun formatMapText(state: VotvBridgeState?): String {
+        val x = state?.playerLocX
+        val y = state?.playerLocY
+        val z = state?.playerLocZ
+        if (x == null || y == null || z == null) return "MAP\nwaiting for game data"
+        return String.format(Locale.US, "MAP\nX: %.0f\nY: %.0f\nZ: %.0f", x, y, z)
+    }
+
+    private fun inventoryPage(): View = FrameLayout(context).apply {
+        val text = TextView(context).applyHubFont().apply {
+            text = formatInventoryText(latestState)
+            textSize = 18f
+            setTextColor(hubTextColor)
+            gravity = Gravity.CENTER
+            letterSpacing = 0.05f
+        }
+        invGaugeText = text
+        addView(
+            text,
+            LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                gravity = Gravity.CENTER
+            },
+        )
+    }
+
+    private fun formatInventoryText(state: VotvBridgeState?): String {
+        val curr = state?.invCurrVol
+        val max = state?.invMaxVol
+        if (curr == null || max == null || max <= 0.0) return "INVENTORY\nwaiting for game data"
+        val pct = (curr / max * 100).toInt()
+        return String.format(Locale.US, "INVENTORY\n%d%% FULL", pct)
     }
 
     // Weighted so the 5 options evenly fill the available height with no title and no scrolling.

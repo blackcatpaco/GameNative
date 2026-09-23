@@ -2650,6 +2650,7 @@ fun XServerScreen(
                 xServerView.getxServer(),
                 touchpadViewProvider = { PluviaApp.touchpadView },
                 useHub = BuildConfig.VOTV_LAUNCHER,
+                container = container,
             ).apply {
                 visibility = View.GONE
                 setMode(ExternalDisplayInputController.Mode.OFF)
@@ -2663,6 +2664,7 @@ fun XServerScreen(
                         context = context,
                         xServer = xServerView.getxServer(),
                         touchpadViewProvider = { PluviaApp.touchpadView },
+                        container = container,
                     ).apply {
                         setMode(configuredExternalMode)
                         start()

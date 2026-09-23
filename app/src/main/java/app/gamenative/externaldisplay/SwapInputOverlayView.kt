@@ -10,6 +10,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import app.gamenative.R
+import com.winlator.container.Container
 import com.winlator.widget.TouchpadView
 import com.winlator.xserver.XServer
 
@@ -18,15 +19,19 @@ class SwapInputOverlayView(
     private val xServer: XServer,
     private val touchpadViewProvider: () -> TouchpadView? = { null },
     private val useHub: Boolean = false,
+    container: Container? = null,
 ) : FrameLayout(context) {
 
     private var mode: ExternalDisplayInputController.Mode = ExternalDisplayInputController.Mode.OFF
 
     // VOTV-only path: a single menu/hub replaces the generic touchpad+keyboard views below.
     // Left null (and never built) when useHub is false, so the regular GameNative app's
-    // external-display feature is unaffected.
+    // external-display feature is unaffected. useHub always comes with a container (see
+    // XServerScreen's BuildConfig.VOTV_LAUNCHER call site).
     private val hubLayout: HubLayout? = if (useHub) {
-        HubLayout(context, xServer, touchpadViewProvider).apply {
+        HubLayout(context, xServer, touchpadViewProvider, requireNotNull(container) {
+            "SwapInputOverlayView(useHub = true) requires a container"
+        }).apply {
             layoutParams = LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
