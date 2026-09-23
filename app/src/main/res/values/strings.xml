@@ -777,6 +777,7 @@
     <string name="votv_importing">Importing game…</string>
     <string name="votv_launch_button">Launch Voices of the Void</string>
     <string name="votv_reimport_button">Import a different copy</string>
+    <string name="votv_container_settings_button">Container Settings</string>
     <string name="loading">Loading</string>
     <string name="votv_import_error_generic">Could not find a game executable in the imported folder</string>
     <string name="votv_import_error_failed">Import failed</string>

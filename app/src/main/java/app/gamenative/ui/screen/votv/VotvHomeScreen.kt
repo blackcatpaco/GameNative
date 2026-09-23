@@ -37,6 +37,7 @@ fun VotvHomeScreen(
     mainViewModel: MainViewModel,
     votvViewModel: VotvViewModel,
     onLaunch: (appId: String) -> Unit,
+    onOpenContainerSettings: (appId: String) -> Unit = {},
 ) {
     val importState by votvViewModel.importState.collectAsState()
     val gameAppId by votvViewModel.gameAppId.collectAsState()
@@ -96,6 +97,9 @@ fun VotvHomeScreen(
                     }
                     TextButton(onClick = { votvViewModel.clearImportedGame() }) {
                         Text(text = stringResource(R.string.votv_reimport_button))
+                    }
+                    TextButton(onClick = { onOpenContainerSettings(gameAppId!!) }) {
+                        Text(text = stringResource(R.string.votv_container_settings_button))
                     }
                 }
             }

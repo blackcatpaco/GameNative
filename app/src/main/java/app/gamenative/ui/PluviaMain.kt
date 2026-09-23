@@ -1686,6 +1686,7 @@ fun PluviaMain(
                                 onSuccess = viewModel::launchApp,
                             )
                         },
+                        onOpenContainerSettings = { appId -> openContainerConfigForAppId = appId },
                     )
                 }
                 /** Library, Downloads **/
