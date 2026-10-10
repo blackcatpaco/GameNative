@@ -199,6 +199,9 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             signingConfig = signingConfigs.getByName("debug")
+            // Personal sideloaded build: debuggable so `adb shell run-as` can reach the Wine
+            // prefix in private storage (VotV's Saved/Crashes, Saved/Logs) without root.
+            isDebuggable = true
             applicationIdSuffix = ".votv"
             buildConfigField("boolean", "VOTV_LAUNCHER", "true")
             // No VOTV-branded art yet; reuses the default launcher icon until real assets land.
