@@ -7,7 +7,10 @@
   VOTV-specific features (hub Map/Terminal/Inventory pages, keybind choices, etc.).
   Blocked by this sandbox's egress policy (`wiki.gg`, 403) as of 2026-10 — ask the
   user to paste content/screenshots, or try again from an environment without that
-  restriction, rather than assuming it's unreachable everywhere.
+  restriction, rather than assuming it's unreachable everywhere. A parsed snapshot
+  of the Items page lives at `docs/votv-reference/items.json` (387 items: name,
+  category, prices, volume, description, icon filename — see that folder's README
+  for provenance and the "no actual icon images, filenames only" caveat).
 
 - **https://github.com/Questwalker/votv-map** — community-built interactive overworld
   map (Leaflet.js, `L.CRS.Simple`). GPL-3.0 licensed; no separate permission is stated
