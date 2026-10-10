@@ -34,6 +34,10 @@ internal class HubLayout(
     private var latestState: VotvBridgeState? = null
     private var mapCoordText: TextView? = null
     private var invGaugeText: TextView? = null
+    private var mapView: VotvMapView? = null
+    // No confirmed live source for VOTV's current season yet (see VotvBridgeState) — defaults to
+    // winter and is manually cycled via a button on the map page in the meantime.
+    private var currentSeason = VotvMapView.Season.WINTER
     private val bridgeReader = VotvBridgeReader(VotvBridgeReader.stateFileFor(container)) { state ->
         post { applyState(state) }
     }
@@ -122,6 +126,7 @@ internal class HubLayout(
         latestState = state
         mapCoordText?.text = formatMapText(state)
         invGaugeText?.text = formatInventoryText(state)
+        mapView?.setPlayerPosition(state.playerLocX?.toFloat(), state.playerLocY?.toFloat())
     }
 
     private fun showMenu() {
@@ -146,18 +151,45 @@ internal class HubLayout(
     }
 
     private fun mapPage(): View = FrameLayout(context).apply {
+        val map = VotvMapView(context).apply {
+            setSeason(currentSeason)
+            setPlayerPosition(latestState?.playerLocX?.toFloat(), latestState?.playerLocY?.toFloat())
+        }
+        mapView = map
+        addView(map, LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+
         val text = TextView(context).applyHubFont().apply {
             text = formatMapText(latestState)
-            textSize = 18f
+            textSize = 14f
             setTextColor(hubTextColor)
-            gravity = Gravity.CENTER
-            letterSpacing = 0.05f
+            setShadowLayer(4f, 0f, 0f, hubBackground)
         }
         mapCoordText = text
         addView(
             text,
             LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                gravity = Gravity.CENTER
+                gravity = Gravity.TOP or Gravity.START
+                setMargins(dp(8), dp(8), 0, 0)
+            },
+        )
+
+        // Manual season toggle until we have a live in-game season signal to drive this from
+        // (see VotvBridgeState / currentSeason).
+        val seasonButton = Button(context).applyHubFont().applyHubButtonStyle().apply {
+            text = currentSeason.name
+            textSize = 12f
+            setOnClickListener {
+                val seasons = VotvMapView.Season.entries
+                currentSeason = seasons[(seasons.indexOf(currentSeason) + 1) % seasons.size]
+                map.setSeason(currentSeason)
+                this.text = currentSeason.name
+            }
+        }
+        addView(
+            seasonButton,
+            LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                gravity = Gravity.BOTTOM or Gravity.END
+                setMargins(0, 0, dp(8), dp(8))
             },
         )
     }
