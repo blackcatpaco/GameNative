@@ -37,4 +37,28 @@ class SteamAssetDownloadTest {
             output.delete()
         }
     }
+
+    @Test
+    fun `downloadImageFs works before Steam service startup`() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val filename = "imagefs_gamenative.txz"
+        val output = File(context.filesDir, filename)
+        val previousService = SteamService.instance
+        SteamService.instance = null
+        mockkObject(SteamService.Companion)
+        try {
+            coEvery { SteamService.fetchFileWithFallback(filename, any(), context, any()) } coAnswers {
+                secondArg<File>().writeText("imagefs-package")
+                arg<(Float) -> Unit>(3).invoke(1f)
+            }
+            var progress = 0f
+            SteamService.downloadImageFs({ progress = it }, this, variant = "gamenative", context = context).await()
+            assertEquals("imagefs-package", output.readText())
+            assertEquals(1f, progress)
+        } finally {
+            unmockkObject(SteamService.Companion)
+            SteamService.instance = previousService
+            output.delete()
+        }
+    }
 }

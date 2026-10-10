@@ -2197,19 +2197,10 @@ class SteamService : Service(), IChallengeUrlChanged {
             context: Context,
         ) = parentScope.asyncIsolated {
             Timber.i("imagefs will be downloaded")
-            if (variant == Container.BIONIC) {
-                val dest = File(instance!!.filesDir, "imagefs_bionic.txz")
-                Timber.d("Downloading imagefs_bionic to " + dest.toString())
-                fetchFileWithFallback("imagefs_bionic.txz", dest, context, onDownloadProgress)
-            } else {
-                Timber.d("Downloading imagefs_gamenative to " + File(instance!!.filesDir, "imagefs_gamenative.txz"));
-                fetchFileWithFallback(
-                    "imagefs_gamenative.txz",
-                    File(instance!!.filesDir, "imagefs_gamenative.txz"),
-                    context,
-                    onDownloadProgress,
-                )
-            }
+            val fileName = if (variant == Container.BIONIC) "imagefs_bionic.txz" else "imagefs_gamenative.txz"
+            val dest = File(context.filesDir, fileName)
+            Timber.d("Downloading $fileName to $dest")
+            fetchFileWithFallback(fileName, dest, context, onDownloadProgress)
         }
 
         fun downloadImageFsPatches(
@@ -2218,8 +2209,8 @@ class SteamService : Service(), IChallengeUrlChanged {
             context: Context,
         ) = parentScope.asyncIsolated {
             Timber.i("imagefs will be downloaded")
-            val dest = File(instance!!.filesDir, "imagefs_patches_gamenative.tzst")
-            Timber.d("Downloading imagefs_patches_gamenative.tzst to " + dest.toString())
+            val dest = File(context.filesDir, "imagefs_patches_gamenative.tzst")
+            Timber.d("Downloading imagefs_patches_gamenative.tzst to $dest")
             fetchFileWithFallback("imagefs_patches_gamenative.tzst", dest, context, onDownloadProgress)
         }
 
@@ -2242,8 +2233,8 @@ class SteamService : Service(), IChallengeUrlChanged {
             context: Context,
         ) = parentScope.asyncIsolated {
             Timber.i("imagefs will be downloaded")
-            val dest = File(instance!!.filesDir, "steam.tzst")
-            Timber.d("Downloading steam.tzst to " + dest.toString())
+            val dest = File(context.filesDir, "steam.tzst")
+            Timber.d("Downloading steam.tzst to $dest")
             fetchFileWithFallback("steam.tzst", dest, context, onDownloadProgress)
         }
 

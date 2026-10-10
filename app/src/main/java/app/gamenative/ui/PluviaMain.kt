@@ -100,7 +100,6 @@ import app.gamenative.launch.LaunchReadiness
 import app.gamenative.ui.enums.DialogType
 import app.gamenative.ui.enums.Orientation
 import app.gamenative.ui.model.MainViewModel
-import app.gamenative.ui.model.VotvViewModel
 import app.gamenative.ui.screen.DebugPaywallScreen
 import app.gamenative.ui.screen.HomeScreen
 import app.gamenative.ui.screen.votv.VotvHomeScreen
@@ -131,7 +130,6 @@ import com.winlator.container.Container
 import com.winlator.container.ContainerData
 import com.winlator.container.ContainerManager
 import com.winlator.core.StringUtils
-import com.winlator.core.TarCompressorUtils
 import com.winlator.xenvironment.ImageFSLegacyMigrator
 import com.winlator.xenvironment.ImageFs
 import com.winlator.xenvironment.ImageFsInstaller
@@ -609,7 +607,7 @@ fun PluviaMain(
                             SteamService.keepAlive = false
                         }
                     } else if (SteamService.keepAlive){
-                        gameBackAction?.invoke() ?: run { navController.popBackStack() }
+                        gameBackAction.invoke() ?: run { navController.popBackStack() }
                     } else if (hasBack) {
                         // TODO: check if back leads to log out and present confidence modal
                         navController.popBackStack()
@@ -825,21 +823,21 @@ fun PluviaMain(
             }
 
             // Start GOGService if user has GOG
-            if (app.gamenative.service.gog.GOGService.hasStoredCredentials(context) &&
-                !app.gamenative.service.gog.GOGService.isRunning
+            if (GOGService.hasStoredCredentials(context) &&
+                !GOGService.isRunning
             ) {
                 Timber.tag("GOG").d("[PluviaMain]: Starting GOGService for logged-in user")
-                app.gamenative.service.gog.GOGService.start(context)
+                GOGService.start(context)
             } else {
-                Timber.tag("GOG").d("GOG SERVICE Not going to start: ${app.gamenative.service.gog.GOGService.isRunning}")
+                Timber.tag("GOG").d("GOG SERVICE Not going to start: ${GOGService.isRunning}")
             }
 
             // Start EpicService if user has Epic credentials
-            if (app.gamenative.service.epic.EpicService.hasStoredCredentials(context) &&
-                !app.gamenative.service.epic.EpicService.isRunning
+            if (EpicService.hasStoredCredentials(context) &&
+                !EpicService.isRunning
             ) {
                 Timber.d("[PluviaMain]: Starting EpicService for logged-in user")
-                app.gamenative.service.epic.EpicService.start(context)
+                EpicService.start(context)
             }
 
             // Start AmazonService if user has Amazon credentials

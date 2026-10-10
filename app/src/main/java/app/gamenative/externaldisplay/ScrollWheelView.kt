@@ -2,11 +2,12 @@ package app.gamenative.externaldisplay
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import androidx.core.graphics.toColorInt
 import com.winlator.xserver.Pointer
 import com.winlator.xserver.XServer
 import kotlin.math.abs
@@ -18,10 +19,12 @@ import kotlin.math.abs
  * centre instantly, so there's no limit on how much you can scroll without re-grabbing from
  * a track edge.
  */
-internal class ScrollWheelView(
+internal class ScrollWheelView @JvmOverloads constructor(
     context: Context,
-    private val xServer: XServer,
-) : View(context) {
+    private val xServer: XServer? = null,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+) : View(context, attrs, defStyleAttr) {
 
     private companion object {
         const val DEADZONE_FRACTION = 0.08f
@@ -33,8 +36,8 @@ internal class ScrollWheelView(
     private val density = resources.displayMetrics.density
     private fun dp(v: Float) = v * density
 
-    private val colorGreen = Color.parseColor("#33FF33")
-    private val colorGreenDim = Color.parseColor("#124312")
+    private val colorGreen = "#33FF33".toColorInt()
+    private val colorGreenDim = "#124312".toColorInt()
 
     private val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
@@ -72,7 +75,7 @@ internal class ScrollWheelView(
     private val snapRunnable = Runnable { runSnap() }
 
     private fun trackHalfHeight(): Float {
-        val usable = (height - paddingTop - paddingBottom) / 2f - trackInset - thumbHeight / 2f
+        val usable = ((height - paddingTop - paddingBottom) / 2f) - trackInset - (thumbHeight / 2f)
         return usable.coerceAtLeast(1f)
     }
 
@@ -86,18 +89,18 @@ internal class ScrollWheelView(
             return
         }
         val f = ((magnitude - deadzone) / (half - deadzone)).coerceIn(0f, 1f)
-        val interval = (MAX_TICK_INTERVAL_MS - (MAX_TICK_INTERVAL_MS - MIN_TICK_INTERVAL_MS) * f).toLong()
+        val interval = (MAX_TICK_INTERVAL_MS - ((MAX_TICK_INTERVAL_MS - MIN_TICK_INTERVAL_MS) * f)).toLong()
         // Screen Y grows downward, so dragging UP (negative offset) scrolls up.
         val button = if (offsetY < 0) Pointer.Button.BUTTON_SCROLL_UP else Pointer.Button.BUTTON_SCROLL_DOWN
-        xServer.injectPointerButtonPress(button)
-        xServer.injectPointerButtonRelease(button)
+        xServer?.injectPointerButtonPress(button)
+        xServer?.injectPointerButtonRelease(button)
         postDelayed(tickRunnable, interval)
     }
 
     private fun runSnap() {
         val elapsed = System.currentTimeMillis() - snapAnimStartTime
         val t = (elapsed.toFloat() / SNAP_BACK_DURATION_MS).coerceIn(0f, 1f)
-        val eased = 1f - (1f - t) * (1f - t)
+        val eased = 1f - ((1f - t) * (1f - t))
         offsetY = snapAnimStartOffset * (1f - eased)
         invalidate()
         if (t < 1f) {
@@ -131,18 +134,29 @@ internal class ScrollWheelView(
                 snapAnimStartTime = System.currentTimeMillis()
                 removeCallbacks(snapRunnable)
                 postOnAnimation(snapRunnable)
+                if (event.actionMasked == MotionEvent.ACTION_UP) {
+                    performClick()
+                }
             }
         }
         return true
     }
 
+    override fun performClick(): Boolean {
+        super.performClick()
+        return true
+    }
+
+    private val trackRect = RectF()
+    private val thumbRect = RectF()
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val w = width.toFloat()
         val h = height.toFloat()
-        if (w <= 0f || h <= 0f) return
+        if ((w <= 0f) || (h <= 0f)) return
 
-        val trackRect = RectF(trackInset, trackInset, w - trackInset, h - trackInset)
+        trackRect.set(trackInset, trackInset, w - trackInset, h - trackInset)
         canvas.drawRect(trackRect, trackPaint)
 
         val centerY = h / 2f
@@ -158,7 +172,7 @@ internal class ScrollWheelView(
         canvas.drawLine(trackRect.left, centerY, trackRect.right, centerY, centerLinePaint)
 
         val thumbCenterY = centerY + offsetY
-        val thumbRect = RectF(
+        thumbRect.set(
             trackRect.left + dp(3f),
             thumbCenterY - thumbHeight / 2f,
             trackRect.right - dp(3f),
