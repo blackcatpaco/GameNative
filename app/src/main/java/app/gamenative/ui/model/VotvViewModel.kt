@@ -156,19 +156,21 @@ class VotvViewModel @Inject constructor(
      * read). No on-screen touch elements are added — this device already has physical buttons,
      * and touch fallback lives in the bottom-screen hub instead.
      *
-     * Default mapping (confirmed VOTV keys only — see the "extra keys?" note below):
+     * Default mapping, cross-checked against the wiki's own default-keybind list
+     * (voicesofthevoid.wiki.gg, "Gamemodes/Tutorial" page — see docs/votv-reference/):
      *  A=R (pick up)  B=Space (jump)  X=F (flashlight)  Y=Tab (inventory/PDA)
-     *  L1=Q  R1=E (interact/hold)  L2=right-click (zoom)  R2=left-click (fire)
+     *  L1=Q  R1=E (interact/hold)  L2=right-click (use item in hold)  R2=left-click (fire)
      *  L3=Ctrl (crouch)  R3=Shift (sprint)
      *  Left stick=WASD (movement)  Right stick=gamepad right thumbstick (camera look)
-     *  D-pad up=C (ragdoll)  D-pad down/left/right=unbound for now (see below)
+     *  D-pad up=C (ragdoll)  D-pad right=X (zoom)  D-pad down/left=unbound for now
      *  Start=Esc (pause)  Select=Tab  Home=GameNative quick menu
      *
-     * D-pad down/left/right are deliberately left unbound: VOTV's 1-9 hotbar keys are moving to
-     * a touch hotbar page on the bottom-screen hub instead of the d-pad, and beyond reload there
-     * wasn't a confidently-sourced "next most important" VOTV key to put here (this sandbox can't
-     * reach voicesofthevoid.wiki.gg or the Steam guide to verify further). Extend [bindings] once
-     * we know what else VOTV uses.
+     * L2's comment previously called this binding "zoom" — wrong, per the wiki's basic-controls
+     * list RMB is "Use item in Hold" and Zoom is its own separate key (X), now bound to D-pad
+     * right instead since it's a real, frequently-used mechanic. D-pad down/left are still
+     * unbound: VOTV's 1-9 hotbar keys are moving to a touch hotbar page on the bottom-screen hub
+     * instead of the d-pad, and there's no reload or other obviously-next-most-important key in
+     * the wiki's basic-controls list to put here. Extend [bindings] if that changes.
      */
     private fun ensureVotvControlsProfile(container: Container) {
         val manager = InputControlsManager(context)
@@ -205,7 +207,7 @@ class VotvViewModel @Inject constructor(
             KeyEvent.KEYCODE_DPAD_UP to Binding.KEY_C,
             KeyEvent.KEYCODE_DPAD_DOWN to Binding.NONE,
             KeyEvent.KEYCODE_DPAD_LEFT to Binding.NONE,
-            KeyEvent.KEYCODE_DPAD_RIGHT to Binding.NONE,
+            KeyEvent.KEYCODE_DPAD_RIGHT to Binding.KEY_X,
             KeyEvent.KEYCODE_BUTTON_START to Binding.KEY_ESC,
             KeyEvent.KEYCODE_BUTTON_SELECT to Binding.KEY_TAB,
             KeyEvent.KEYCODE_BUTTON_MODE to Binding.OPEN_NAVIGATION_MENU,
@@ -238,6 +240,6 @@ class VotvViewModel @Inject constructor(
     private companion object {
         const val VOTV_PROFILE_NAME = "VOTV Controller"
         const val EXTRA_DEFAULTS_VERSION = "votvDefaultsVersion"
-        const val VOTV_DEFAULTS_VERSION = 6
+        const val VOTV_DEFAULTS_VERSION = 7
     }
 }

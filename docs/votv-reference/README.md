@@ -28,3 +28,11 @@ caveat as the Questwalker map assets noted in root `CLAUDE.md`.
 
 Parsed with `bs4` from the saved HTML; see git history around 2026-10-10 for the parsing script
 if the source page structure changes and this needs regenerating.
+
+## `gamemodes-tutorial.md`
+
+Full text (converted to Markdown, tables flattened) of
+https://voicesofthevoid.wiki.gg/wiki/Gamemodes/Tutorial — the in-game tutorial level's walkthrough,
+including VOTV's **default keybind list** (used to cross-check/correct the controller bindings in
+`VotvViewModel.kt`'s `ensureVotvControlsProfile`) plus secrets/trivia about the tutorial area
+itself (lower priority, general game knowledge).
