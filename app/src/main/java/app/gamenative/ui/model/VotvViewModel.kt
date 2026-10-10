@@ -33,7 +33,7 @@ import timber.log.Timber
  */
 @HiltViewModel
 class VotvViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     data class ImportState(
@@ -63,7 +63,7 @@ class VotvViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             var lastShown = 0L
             val result = CustomGameImporter.importFromTreeUri(context, uri, deleteSource = false) { progress ->
-                if (progress.copiedBytes - lastShown > 8_000_000L) {
+                if ((progress.copiedBytes - lastShown) > 8_000_000L) {
                     lastShown = progress.copiedBytes
                     _importState.value = ImportState(isImporting = true, progress = progress)
                 }
@@ -107,19 +107,17 @@ class VotvViewModel @Inject constructor(
         val appliedVersion = container.getExtra(EXTRA_DEFAULTS_VERSION, "0").toIntOrNull() ?: 0
         if (appliedVersion >= VOTV_DEFAULTS_VERSION) return
 
-        container.setExternalDisplayMode(Container.EXTERNAL_DISPLAY_MODE_HYBRID)
-        container.setExternalDisplaySwap(false)
+        container.externalDisplayMode = Container.EXTERNAL_DISPLAY_MODE_HYBRID
+        container.isExternalDisplaySwap = false
 
         // VOTV has no meaningful native gamepad support, so the sticks are only useful once
         // translated to keyboard/mouse: left stick -> WASD, right stick -> mouse-look.
-        container.setShooterMode(true)
-        container.setShooterConfig(
-            ShooterModeConfig(
-                movementType = ShooterModeConfig.MOVEMENT_GAMEPAD_LEFT_STICK,
-                lookType = ShooterModeConfig.LOOK_GAMEPAD_RIGHT_STICK,
-                sprintBinding = ShooterModeConfig.SPRINT_BINDING_SHIFT,
-            ).toJson(),
-        )
+        container.isShooterMode = true
+        container.shooterConfig = ShooterModeConfig(
+            movementType = ShooterModeConfig.MOVEMENT_GAMEPAD_LEFT_STICK,
+            lookType = ShooterModeConfig.LOOK_GAMEPAD_RIGHT_STICK,
+            sprintBinding = ShooterModeConfig.SPRINT_BINDING_SHIFT,
+        ).toJson()
 
         ensureVotvControlsProfile(container)
         ensureVotvExecutablePath(container)
@@ -170,17 +168,15 @@ class VotvViewModel @Inject constructor(
      * right instead since it's a real, frequently-used mechanic. D-pad down/left are still
      * unbound: VOTV's 1-9 hotbar keys are moving to a touch hotbar page on the bottom-screen hub
      * instead of the d-pad, and there's no reload or other obviously-next-most-important key in
-     * the wiki's basic-controls list to put here. Extend [bindings] if that changes.
+     * the wiki's basic-controls list to put here. Extend bindings if that changes.
      */
     private fun ensureVotvControlsProfile(container: Container) {
         val manager = InputControlsManager(context)
-        // createProfile() assumes `profiles` is already loaded (it does profiles.add(...) with
-        // no lazy-load guard, unlike getProfile()/getProfiles()); force the load first so a
-        // fresh manager instance doesn't NPE when no profileId extra exists yet.
-        manager.getProfiles()
+        // Ensure profiles are loaded before creating a new profile.
+        manager.profiles
         val existingId = container.getExtra("profileId", "").toIntOrNull()
         val existing = existingId?.let { manager.getProfile(it) }
-        val profile = if (existing != null && existing.name == VOTV_PROFILE_NAME) {
+        val profile = if ((existing != null) && (existing.name == VOTV_PROFILE_NAME)) {
             existing
         } else {
             manager.createProfile(VOTV_PROFILE_NAME).also {
@@ -189,7 +185,7 @@ class VotvViewModel @Inject constructor(
         }
 
         val controller = profile.getController("*") ?: profile.addController("*")
-        controller.getControllerBindings().toList().forEach(controller::removeControllerBinding)
+        controller.controllerBindings.toList().forEach(controller::removeControllerBinding)
 
         val bindings = mapOf(
             // Pick up (R), interact/hold (E), and ragdoll (C) rotated one slot from the original

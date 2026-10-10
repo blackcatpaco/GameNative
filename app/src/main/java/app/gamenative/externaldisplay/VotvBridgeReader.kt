@@ -37,7 +37,7 @@ class VotvBridgeReader(
         val text = try {
             if (!stateFile.exists()) return
             stateFile.readText()
-        } catch (e: IOException) {
+        } catch (_: IOException) {
             // Can transiently fail mid-write despite the mod's tmp+rename pattern; skip this tick.
             return
         }

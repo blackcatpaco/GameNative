@@ -12,15 +12,18 @@ import androidx.core.content.ContextCompat
 import app.gamenative.R
 import com.winlator.container.Container
 import com.winlator.widget.TouchpadView
+import androidx.core.view.isVisible
 import com.winlator.xserver.XServer
 
-class SwapInputOverlayView(
+class SwapInputOverlayView @JvmOverloads constructor(
     context: Context,
-    private val xServer: XServer,
-    private val touchpadViewProvider: () -> TouchpadView? = { null },
+    xServer: XServer,
+    touchpadViewProvider: () -> TouchpadView? = { null },
     private val useHub: Boolean = false,
     container: Container? = null,
-) : FrameLayout(context) {
+    attrs: android.util.AttributeSet? = null,
+    defStyleAttr: Int = 0,
+) : FrameLayout(context, attrs, defStyleAttr) {
 
     private var mode: ExternalDisplayInputController.Mode = ExternalDisplayInputController.Mode.OFF
 
@@ -33,8 +36,8 @@ class SwapInputOverlayView(
             "SwapInputOverlayView(useHub = true) requires a container"
         }).apply {
             layoutParams = LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT,
             )
             visibility = View.GONE
         }
@@ -151,13 +154,15 @@ class SwapInputOverlayView(
 
     private fun toggleKeyboard() {
         if (mode != ExternalDisplayInputController.Mode.HYBRID) return
-        keyboardView?.visibility = if (keyboardView?.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+        val view = keyboardView ?: return
+        view.isVisible = !view.isVisible
         post { updateToggleButtonPosition() }
     }
 
     private fun updateToggleButtonPosition() {
-        keyboardToggleButton?.translationY = if (keyboardView?.visibility == View.VISIBLE) {
-            -(keyboardView?.height ?: 0).toFloat()
+        val kb = keyboardView
+        keyboardToggleButton?.translationY = if (kb?.isVisible == true) {
+            -kb.height.toFloat()
         } else {
             0f
         }

@@ -45,9 +45,7 @@ fun VotvHomeScreen(
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),
     ) { uri ->
-        if (uri != null) {
-            votvViewModel.importGame(uri)
-        }
+        uri?.let { votvViewModel.importGame(it) }
     }
 
     LaunchedEffect(importState.error) {
@@ -83,22 +81,30 @@ fun VotvHomeScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                     )
-                    Button(onClick = { importLauncher.launch(null) }) {
+                    Button(
+                        onClick = { importLauncher.launch(null) },
+                    ) {
                         Text(text = stringResource(R.string.votv_import_button))
                     }
                 }
 
                 else -> {
-                    Button(onClick = {
-                        mainViewModel.setLaunchedAppId(gameAppId!!)
-                        onLaunch(gameAppId!!)
-                    }) {
+                    Button(
+                        onClick = {
+                            mainViewModel.setLaunchedAppId(gameAppId!!)
+                            onLaunch(gameAppId!!)
+                        },
+                    ) {
                         Text(text = stringResource(R.string.votv_launch_button))
                     }
-                    TextButton(onClick = { votvViewModel.clearImportedGame() }) {
+                    TextButton(
+                        onClick = { votvViewModel.clearImportedGame() },
+                    ) {
                         Text(text = stringResource(R.string.votv_reimport_button))
                     }
-                    TextButton(onClick = { onOpenContainerSettings(gameAppId!!) }) {
+                    TextButton(
+                        onClick = { onOpenContainerSettings(gameAppId!!) },
+                    ) {
                         Text(text = stringResource(R.string.votv_container_settings_button))
                     }
                 }
