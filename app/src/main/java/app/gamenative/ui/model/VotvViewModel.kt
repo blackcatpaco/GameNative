@@ -122,9 +122,32 @@ class VotvViewModel @Inject constructor(
         )
 
         ensureVotvControlsProfile(container)
+        ensureVotvExecutablePath(container)
 
         container.putExtra(EXTRA_DEFAULTS_VERSION, VOTV_DEFAULTS_VERSION.toString())
         container.saveData()
+    }
+
+    /**
+     * Auto-selects VOTV's real executable so a fresh import launches with no manual Container
+     * Settings step. VOTV's exe lives at least two levels deeper than the generic custom-game
+     * auto-detect (CustomGameScanner.findUniqueExeRelativeToFolder) can reach — that one only
+     * scans the import root plus one level of subfolders — so without this, getWineStartCommand's
+     * own fallback would come up empty and the game wouldn't launch at all. Only acts while
+     * executablePath is still unset, so it never overwrites a manually-configured path.
+     */
+    private fun ensureVotvExecutablePath(container: Container) {
+        if (container.executablePath.isNotEmpty()) return
+
+        val executables = ContainerUtils.scanExecutablesInADrive(container.drives)
+        val chosen = executables.firstOrNull { it.endsWith("-Win64-Shipping.exe", ignoreCase = true) }
+            ?: executables.firstOrNull()
+        if (chosen == null) {
+            Timber.tag("VotvViewModel").w("No executable found in VOTV import to auto-select")
+            return
+        }
+        Timber.tag("VotvViewModel").i("Auto-selected VOTV executable: $chosen")
+        container.executablePath = chosen
     }
 
     /**
@@ -215,6 +238,6 @@ class VotvViewModel @Inject constructor(
     private companion object {
         const val VOTV_PROFILE_NAME = "VOTV Controller"
         const val EXTRA_DEFAULTS_VERSION = "votvDefaultsVersion"
-        const val VOTV_DEFAULTS_VERSION = 5
+        const val VOTV_DEFAULTS_VERSION = 6
     }
 }

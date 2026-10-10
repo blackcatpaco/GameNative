@@ -140,6 +140,7 @@ import app.gamenative.utils.ManifestComponentHelper
 import app.gamenative.utils.WindowActivity
 import app.gamenative.utils.PerfSampler
 import app.gamenative.utils.SessionReport
+import app.gamenative.utils.VotvUe4ssInstaller
 import app.gamenative.utils.launchdependencies.BionicSteamAssetsDependency
 import app.gamenative.utils.downloader.DXWrapperDownloader
 import app.gamenative.utils.downloader.GraphicsDriverDownloader
@@ -4722,6 +4723,10 @@ private fun getWineStartCommand(
         // Set working directory to the game folder
         val executableDir = gameFolderPath + "/" + executablePath.substringBeforeLast("/", "")
         guestProgramLauncherComponent.workingDir = File(executableDir)
+
+        if (BuildConfig.VOTV_LAUNCHER) {
+            VotvUe4ssInstaller.ensureInstalled(context, container, File(executableDir))
+        }
 
         // Normalize path separators (ensure Windows-style backslashes)
         val normalizedPath = executablePath.replace('/', '\\')
